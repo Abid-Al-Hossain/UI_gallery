@@ -3,9 +3,33 @@
 /* eslint-disable @next/next/no-img-element */
 import { useMemo, useState, type CSSProperties } from "react";
 import type { GalleryState } from "../types";
+import { SYSTEM_FONTS } from "@/components/shared/typography/fontConstants";
+
+function resolveFont(state: { fontBucket: "system" | "google"; googleFontFamily: string; systemFontIdx: number }): string {
+  return state.fontBucket === "google"
+    ? `"${state.googleFontFamily}", sans-serif`
+    : (SYSTEM_FONTS[state.systemFontIdx]?.css ?? "inherit");
+}
+
+function buildShadow(state: { shadowEnabled: boolean; shadowX: number; shadowY: number; shadowBlur: number; shadowSpread: number; shadowColor: string; shadowOpacity: number }): string {
+  if (!state.shadowEnabled) return "none";
+  const hex = Math.round(state.shadowOpacity * 255).toString(16).padStart(2, "0");
+  return `${state.shadowX}px ${state.shadowY}px ${state.shadowBlur}px ${state.shadowSpread}px ${state.shadowColor}${hex}`;
+}
+
+function buildRadius(state: { radiusLinked: boolean; radius: number; radiusTL: number; radiusTR: number; radiusBR: number; radiusBL: number }): string {
+  return state.radiusLinked
+    ? `${state.radius}px`
+    : `${state.radiusTL}px ${state.radiusTR}px ${state.radiusBR}px ${state.radiusBL}px`;
+}
 
 function shell(state: GalleryState): CSSProperties {
-  return { width: state.width, minHeight: state.height, padding: state.padding, gap: state.gap, borderRadius: state.radius, border: `${state.borderWidth}px solid ${state.border}`, boxShadow: `0 ${Math.round(state.shadow / 3)}px ${state.shadow}px rgba(0,0,0,.28)`, background: state.background, color: state.foreground, fontFamily: state.fontFamily, opacity: state.disabled ? 0.55 : 1 };
+  return { width: state.width, minHeight: state.height, padding: state.padding, gap: state.gap, borderRadius: buildRadius(state), border: `${state.borderWidth}px ${state.borderStyle} ${state.border}`, boxShadow: buildShadow(state), background: state.background, color: state.foreground, fontFamily: resolveFont(state),
+    fontStyle: state.fontStyle,
+    textTransform: state.textTransform,
+    textDecoration: state.textDecoration,
+    letterSpacing: `${state.letterSpacing}${state.letterSpacingUnit}`,
+    lineHeight: state.lineHeight, opacity: state.disabled ? 0.55 : 1 };
 }
 
 function imageDataUri(index: number, accent: string, background: string) {
@@ -47,7 +71,7 @@ export default function LivePreview({ state }: { state: GalleryState }) {
         {visibleImages.map((image) => {
           const originalIndex = images.findIndex((item) => item.id === image.id);
           const selected = state.selectable && selectedIndex === originalIndex;
-          return <figure key={image.id} aria-selected={selected || undefined} className="border p-2" style={{ breakInside: "avoid", margin: layoutMode === "masonry" ? `0 0 ${state.gap}px` : 0, display: layoutMode === "list" ? "grid" : "block", gridTemplateColumns: layoutMode === "list" ? "minmax(120px, 220px) 1fr" : undefined, gap: state.gap, borderColor: selected ? state.accent : state.border, borderRadius: Math.max(10, state.radius - 10), background: "rgba(255,255,255,.05)", transition: state.motion ? "transform 0.25s ease, filter 0.25s ease" : "none" }}>
+          return <figure key={image.id} aria-selected={selected || undefined} className="border p-2" style={{ breakInside: "avoid", margin: layoutMode === "masonry" ? `0 0 ${state.gap}px` : 0, display: layoutMode === "list" ? "grid" : "block", gridTemplateColumns: layoutMode === "list" ? "minmax(120px, 220px) 1fr" : undefined, gap: state.gap, borderColor: selected ? state.accent : state.border, borderRadius: Math.max(10, state.radius - 10), background: "rgba(255,255,255,.05)", transition: state.transitionDuration > 0 ? "transform 0.25s ease, filter 0.25s ease" : "none" }}>
             <button type="button" disabled={state.disabled} aria-label={`Open ${image.title} in lightbox`} onClick={() => { setSelectedIndex(originalIndex); setLightboxIndex(originalIndex); }} className="block w-full border-0 bg-transparent p-0 text-left">
               <img src={image.src} alt={image.alt} title={image.title} loading="lazy" className="block w-full" style={{ aspectRatio, objectFit: state.fit, borderRadius: Math.max(8, state.radius - 14) }} />
             </button>
@@ -62,7 +86,7 @@ export default function LivePreview({ state }: { state: GalleryState }) {
       <p aria-live="polite" className="text-xs" style={{ color: state.muted }}>{visibleImages.length} images shown. {state.selectable && selectedIndex >= 0 ? `${images[selectedIndex]?.title} selected.` : "Selection off."}</p>
     </div>
     {lightboxImage && <div role="dialog" aria-modal="true" aria-label={lightboxImage.title} className="absolute inset-4 z-10 grid place-items-center rounded-3xl p-4" style={{ background: "rgba(2,6,23,.76)" }}>
-      <figure className="m-0 w-full max-w-[520px] p-4" style={{ borderRadius: state.radius, background: state.background, color: state.foreground }}>
+      <figure className="m-0 w-full max-w-[520px] p-4" style={{ borderRadius: buildRadius(state), background: state.background, color: state.foreground }}>
         <img src={lightboxImage.src} alt={lightboxImage.alt} title={lightboxImage.title} className="w-full" style={{ borderRadius: Math.max(8, state.radius - 12) }} />
         <figcaption className="mt-3">
           <strong>{lightboxImage.title}</strong>
