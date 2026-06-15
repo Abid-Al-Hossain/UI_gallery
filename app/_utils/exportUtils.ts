@@ -10,6 +10,9 @@ export function buildReactCode(state: GalleryState) {
   return `import * as React from "react";
 
 const state = ${JSON.stringify(state, null, 2)};
+function resolveFont(s) { return s.fontBucket === "google" ? '"' + s.googleFontFamily + '", sans-serif' : "inherit"; }
+function buildShadow(s) { if (!s.shadowEnabled) return "none"; var hex = Math.round(s.shadowOpacity * 255).toString(16).padStart(2, "0"); return s.shadowX + "px " + s.shadowY + "px " + s.shadowBlur + "px " + s.shadowSpread + "px " + s.shadowColor + hex; }
+
 
 function imageDataUri(index, accent, background) {
   const svg = \`
@@ -58,12 +61,13 @@ export default function GalleryComponent() {
         minHeight: state.height,
         padding: state.padding,
         borderRadius: state.radius,
-        border: state.borderWidth + "px solid " + state.border,
-        boxShadow: "0 " + Math.round(state.shadow / 3) + "px " + state.shadow + "px rgba(0,0,0,.28)",
+        border: state.borderWidth + "px " + state.borderStyle + " " + (state.disabled && state.disabledUseCustomColors ? state.disabledBorder : state.border),
+        boxShadow: buildShadow(state),
         background: state.background,
         color: state.foreground,
-        fontFamily: state.fontFamily,
-        opacity: state.disabled ? 0.55 : 1,
+        fontFamily: resolveFont(state),
+        opacity: state.disabled ? (state.disabledOpacity ?? 0.5) : 1,
+cursor: state.disabled ? state.disabledCursor : undefined,
       }}
     >
       <div style={{ display: "grid", gap: state.gap }}>
@@ -98,7 +102,7 @@ export default function GalleryComponent() {
             const originalIndex = images.findIndex((item) => item.id === image.id);
             const selected = state.selectable && selectedIndex === originalIndex;
             return (
-              <figure key={image.id} aria-selected={selected || undefined} style={{ breakInside: "avoid", margin: layoutMode === "masonry" ? "0 0 " + state.gap + "px" : 0, display: layoutMode === "list" ? "grid" : "block", gridTemplateColumns: layoutMode === "list" ? "minmax(120px, 220px) 1fr" : undefined, gap: state.gap, padding: 10, borderRadius: Math.max(10, state.radius - 10), border: "1px solid " + (selected ? state.accent : state.border), background: "rgba(255,255,255,.05)", transition: state.transitionDuration > 0 ? "$1" : "none" }}>
+              <figure key={image.id} aria-selected={selected || undefined} style={{ breakInside: "avoid", margin: layoutMode === "masonry" ? "0 0 " + state.gap + "px" : 0, display: layoutMode === "list" ? "grid" : "block", gridTemplateColumns: layoutMode === "list" ? "minmax(120px, 220px) 1fr" : undefined, gap: state.gap, padding: 10, borderRadius: Math.max(10, state.radius - 10), border: "1px solid " + (selected ? state.accent : state.border), background: "rgba(255,255,255,.05)", transition: state.transitionDuration > 0 ? "all " + state.transitionDuration + "ms " + state.transitionEasing : "none" }}>
                 <button type="button" disabled={state.disabled} aria-label={\`Open \${image.title} in lightbox\`} onClick={() => { setSelectedIndex(originalIndex); setLightboxIndex(originalIndex); }} style={{ display: "block", width: "100%", padding: 0, border: 0, background: "transparent", cursor: state.disabled ? "not-allowed" : "zoom-in" }}>
                   <img src={image.src} alt={image.alt} title={image.title} loading="lazy" style={{ display: "block", width: "100%", aspectRatio, objectFit: state.fit, borderRadius: Math.max(8, state.radius - 14) }} />
                 </button>

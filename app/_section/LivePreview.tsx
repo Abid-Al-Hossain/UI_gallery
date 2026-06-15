@@ -24,7 +24,7 @@ function buildRadius(state: { radiusLinked: boolean; radius: number; radiusTL: n
 }
 
 function shell(state: GalleryState): CSSProperties {
-  return { width: state.width, minHeight: state.height, padding: state.padding, gap: state.gap, borderRadius: buildRadius(state), border: `${state.borderWidth}px ${state.borderStyle} ${state.border}`, boxShadow: buildShadow(state), background: state.background, color: state.foreground, fontFamily: resolveFont(state),
+  return { width: state.width, minHeight: state.height, padding: state.padding, gap: state.gap, borderRadius: buildRadius(state), border: `${state.borderWidth}px ${state.borderStyle} ${state.disabled && state.disabledUseCustomColors ? state.disabledBorder : state.border}`, boxShadow: buildShadow(state), background: state.disabled && state.disabledUseCustomColors ? state.disabledBg : state.background, color: state.foreground, fontFamily: resolveFont(state),
     fontStyle: state.fontStyle,
     textTransform: state.textTransform,
     textDecoration: state.textDecoration,
@@ -86,7 +86,7 @@ export default function LivePreview({ state }: { state: GalleryState }) {
       <p aria-live="polite" className="text-xs" style={{ color: state.muted }}>{visibleImages.length} images shown. {state.selectable && selectedIndex >= 0 ? `${images[selectedIndex]?.title} selected.` : "Selection off."}</p>
     </div>
     {lightboxImage && <div role="dialog" aria-modal="true" aria-label={lightboxImage.title} className="absolute inset-4 z-10 grid place-items-center rounded-3xl p-4" style={{ background: "rgba(2,6,23,.76)" }}>
-      <figure className="m-0 w-full max-w-[520px] p-4" style={{ borderRadius: buildRadius(state), background: state.background, color: state.foreground }}>
+      <figure className="m-0 w-full max-w-[520px] p-4" style={{ borderRadius: buildRadius(state), background: state.disabled && state.disabledUseCustomColors ? state.disabledBg : state.background, color: state.foreground }}>
         <img src={lightboxImage.src} alt={lightboxImage.alt} title={lightboxImage.title} className="w-full" style={{ borderRadius: Math.max(8, state.radius - 12) }} />
         <figcaption className="mt-3">
           <strong>{lightboxImage.title}</strong>
