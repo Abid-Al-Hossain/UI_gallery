@@ -7,7 +7,8 @@ import type { GalleryState } from "../types";
 type Props = { state: GalleryState; update: <K extends keyof GalleryState>(key: K, value: GalleryState[K]) => void };
 
 export default function LayoutSection({ state, update }: Props) {
-  return <SectionCard title="Layout" subtitle="Layout controls for native gallery generation."><Select label="Aspect ratio" value={state.aspectRatio} options={[
+  return <SectionCard title="Layout" subtitle="Layout controls for native gallery generation.">
+      <div className="space-y-4"><Select label="Aspect ratio" value={state.aspectRatio} options={[
   "square",
   "16/9",
   "4/3",
@@ -17,5 +18,6 @@ export default function LayoutSection({ state, update }: Props) {
   "cover",
   "contain",
   "fill"
-]} onChange={(value) => update("fit", value)} /></SectionCard>;
+]} onChange={(value) => update("fit", value)} /></div>
+    </SectionCard>;
 }
